@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>เปียโนฝึกเล่น</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600&display=swap">
+<style>
+:root{--bg:#e6ebf0;--ink:#16222d;--muted:#566574;--panel:#f7f9fb;--accent:#0f7c8a;--glow:#38c3d3;--cv:#14202b;--white:#fbfbf8;--black:#1b1f24;--edge:#b9c3cc;--onacc:#fff;--bad:#e0475b;--bar:#f2994a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1820;--ink:#e8eef3;--muted:#8fa0ae;--panel:#17232d;--accent:#38c3d3;--cv:#0a1117;--edge:#2c3b47;--onacc:#06222a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1820;--ink:#e8eef3;--muted:#8fa0ae;--panel:#17232d;--accent:#38c3d3;--cv:#0a1117;--edge:#2c3b47;--onacc:#06222a;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Prompt",system-ui,-apple-system,"Noto Sans Thai",sans-serif;min-height:100vh;display:flex;justify-content:center;padding:18px 12px}
+main{width:100%;max-width:760px}
+h1{font-size:1.75rem;margin:0 0 4px;font-weight:600;letter-spacing:-.01em}
+.more{margin-top:10px}.more summary{color:var(--muted);font-weight:400;font-size:.9rem}
+#play{min-width:120px;font-size:1.05rem}
+.sub{color:var(--muted);margin:0 0 14px;font-size:.92rem}
+.panel{background:var(--panel);border:1px solid var(--edge);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 8px 24px rgba(10,20,30,.12)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+select,button,input,textarea{font:inherit;color:var(--ink)}
+select,input[type=text],textarea{background:var(--bg);border:1px solid var(--edge);border-radius:10px;padding:10px 12px;flex:1;min-width:140px;width:100%}
+textarea{min-height:90px;resize:vertical}
+button,.btn{background:linear-gradient(135deg,var(--accent),var(--glow));color:var(--onacc);border:0;border-radius:999px;padding:12px 26px;font-weight:600;cursor:pointer;display:inline-block;box-shadow:0 4px 14px rgba(56,195,211,.35);transition:transform .08s}
+button:active{transform:scale(.97)}
+.alt{background:transparent;color:var(--ink);border:1px solid var(--edge)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible,.btn:focus-within{outline:3px solid var(--glow);outline-offset:2px}
+label{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:.9rem;width:100%}
+label input[type=range]{flex:1;accent-color:var(--accent)}
+label input[type=checkbox]{accent-color:var(--accent);width:18px;height:18px}
+#file{position:absolute;opacity:0;width:1px;height:1px}
+#stat{min-height:1.5em;color:var(--muted);font-size:.9rem;margin:0 0 8px}
+summary{cursor:pointer;font-weight:600}
+.hint{color:var(--muted);font-size:.85rem;margin:8px 0}
+#err{color:var(--bad);font-size:.88rem;margin:6px 0 0;min-height:1.2em}
+.stage{border:1px solid var(--edge);border-radius:18px;overflow:hidden;background:var(--cv);touch-action:none;box-shadow:0 14px 36px rgba(0,0,0,.28)}
+canvas{display:block;width:100%;height:clamp(300px,52vh,520px)}
+.kb{position:relative;height:clamp(110px,18vh,170px);background:#000}
+.w,.b{position:absolute;top:0;margin:0;padding:0;border:0;min-width:0;cursor:pointer;transition:background .08s}
+.w{height:100%;background:linear-gradient(#fff,#e4e8ec);border-right:1px solid #c9cdd1;border-radius:0 0 7px 7px;box-shadow:inset 0 -5px 0 rgba(0,0,0,.08)}
+.b{height:60%;background:linear-gradient(#2b3138,#0d1013);z-index:2;border-radius:0 0 5px 5px;box-shadow:0 3px 4px rgba(0,0,0,.5)}
+.w.next{background:#a9ecf3}.b.next{background:#1a8a99}
+.w.on{background:var(--glow)}.b.on{background:var(--accent)}
+.w.bad,.b.bad{background:var(--bad)}
+</style>
+</head>
+<body>
+<main>
+  <h1>เปียโนฝึกเล่น</h1>
+  <p class="sub">โน้ตไหลลงมาที่คีย์ เล่นตามบนจอ หรือเปิดไมค์ให้ฟังเปียโนจริงของคุณ</p>
+  <div class="panel">
+    <div class="row">
+      <select id="song" aria-label="เลือกเพลง"></select>
+      <button id="play">เริ่ม</button>
+    </div>
+    <details class="more"><summary>ตั้งค่าการเล่น (โหมด · ขนาดคีย์บอร์ด · ความเร็ว · ไมค์)</summary>
+    <div class="row" style="margin-top:10px">
+      <select id="mode" aria-label="โหมด">
+        <option value="follow">เล่นตาม (รอจนกดถูก)</option>
+        <option value="auto">ดูเล่นเอง</option>
+      </select>
+      <select id="size" aria-label="ขนาดคีย์บอร์ดจริง"><option value="auto">คีย์บอร์ด: ปรับตามเพลง</option><option value="88">คีย์บอร์ดจริง 88 คีย์</option><option value="61">คีย์บอร์ดจริง 61 คีย์</option><option value="49">คีย์บอร์ดจริง 49 คีย์</option></select>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <label>ความเร็ว <input id="bpm" type="range" min="40" max="200" value="90"><span id="bpmv">90</span></label>
+      <label><input type="checkbox" id="mic"> ใช้ไมค์ฟังเปียโนจริง (โหมดเล่นตาม)</label>
+    </div>
+    </details>
+  </div>
+  <input type="range" id="prog" min="0" max="1000" value="0" aria-label="ตำแหน่งเพลง" style="width:100%;accent-color:var(--bar);margin:0 0 6px">
+  <p id="stat" aria-live="polite"></p>
+  <div class="stage"><canvas id="cv"></canvas><div class="kb" id="kb"></div></div>
+
+  <details class="panel" style="margin-top:12px">
+    <summary>เพิ่มเพลง</summary>
+    <div class="row" style="margin-top:10px">
+      <span class="btn alt"><label style="color:inherit;cursor:pointer;width:auto">นำเข้าไฟล์ MIDI (.mid)<input type="file" id="file" accept=".mid,.midi,audio/midi"></label></span>
+    </div>
+    <p class="hint">หรือพิมพ์โน้ตเอง คั่นด้วยช่องว่าง เช่น <b>C4 D4 E4:2 R:1</b> และคอร์ดใช้ + เช่น <b>C4+E4+G4:2</b><br>เลขหลัง : คือจำนวนจังหวะ (ไม่ใส่ = 1) · R คือเว้นจังหวะ · ใช้ # สำหรับเสียงชาร์ป · ช่วง A0 ถึง C8</p>
+    <div class="row">
+      <input type="text" id="nm" placeholder="ชื่อเพลง" aria-label="ชื่อเพลง">
+      <textarea id="nt" placeholder="C4 C4 G4 G4 A4 A4 G4:2" aria-label="โน้ต"></textarea>
+      <button id="add">บันทึกเพลง</button>
+      <button id="del" class="alt">ลบเพลงนี้</button>
+    </div>
+    <p id="err" role="alert"></p>
+  </details>
+</main>
+<script>
+const BUILT=[
+["Ode to Joy","E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 E4:1.5 D4:.5 D4:2 E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 D4:1.5 C4:.5 C4:2"],
+["Twinkle Twinkle","C4 C4 G4 G4 A4 A4 G4:2 F4 F4 E4 E4 D4 D4 C4:2 G4 G4 F4 F4 E4 E4 D4:2 G4 G4 F4 F4 E4 E4 D4:2 C4 C4 G4 G4 A4 A4 G4:2 F4 F4 E4 E4 D4 D4 C4:2"],
+["Jingle Bells (ท่อนร้อง)","E4 E4 E4:2 E4 E4 E4:2 E4 G4 C4:1.5 D4:.5 E4:4 F4 F4 F4:1.5 F4:.5 F4 E4 E4 E4:.5 E4:.5 E4 D4 D4 E4 D4:2 G4:2"],
+["Für Elise (ท่อนแรก)","E5:.5 D#5:.5 E5:.5 D#5:.5 E5:.5 B4:.5 D5:.5 C5:.5 A4:1.5 R:.5 C4:.5 E4:.5 A4:.5 B4:1.5 R:.5 E4:.5 G#4:.5 B4:.5 C5:1.5 R:.5 E4:.5 E5:.5 D#5:.5 E5:.5 D#5:.5 E5:.5 B4:.5 D5:.5 C5:.5 A4:1.5"],
+["Mary Had a Little Lamb","E4 D4 C4 D4 E4 E4 E4:2 D4 D4 D4:2 E4 G4 G4:2 E4 D4 C4 D4 E4 E4 E4 E4 D4 D4 E4 D4 C4:4"],
+["ตัวอย่างคอร์ด C–F–G–C","C3+C4+E4+G4:4 F3+C4+F4+A4:4 G3+B3+D4+G4:4 C3+C4+E4+G4:4"]
+];
+let user=[];try{user=JSON.parse(localStorage.getItem("pt_songs")||"[]")}catch(e){}
+const save=()=>{try{localStorage.setItem("pt_songs",JSON.stringify(user))}catch(e){}};
+const N=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const isB=m=>N[m%12].includes("#"),nameOf=m=>N[m%12]+(Math.floor(m/12)-1);
+function parse(txt){
+  const steps=[],notes=[];let s=0;
+  for(const tok of txt.trim().split(/\s+/).filter(Boolean)){
+    const[nn,dd]=tok.split(":"),d=dd===undefined?1:parseFloat(dd);
+    if(!(d>0))throw "จังหวะผิดที่ “"+tok+"”";
+    if(/^R$/i.test(nn)){s+=d;continue}
+    const ns=[];
+    for(const p of nn.split("+")){
+      const k=p.match(/^([A-Ga-g]#?)(\d)$/);if(!k)throw "อ่านโน้ตไม่ออกที่ “"+tok+"”";
+      const m=N.indexOf(k[1].toUpperCase())+12*(+k[2]+1);
+      if(m<21||m>108)throw "“"+p+"” อยู่นอกช่วง A0–C8";
+      const n={m,s,d,hit:false};ns.push(n);notes.push(n);
+    }
+    steps.push({s,d,ns});s+=d;
+  }
+  if(!steps.length)throw "ยังไม่มีโน้ต";
+  return{steps,notes};
+}
+function readMidi(buf){
+  const v=new DataView(buf);let p=0;const u32=()=>{const x=v.getUint32(p);p+=4;return x},u16=()=>{const x=v.getUint16(p);p+=2;return x};
+  const vl=()=>{let x=0,c;do{c=v.getUint8(p++);x=x<<7|c&127}while(c&128);return x};
+  if(u32()!==0x4d546864)throw "ไม่ใช่ไฟล์ MIDI";u32();u16();const nt=u16(),tpq=u16();
+  let tempo=0;const ev=[];
+  for(let t=0;t<nt;t++){
+    if(u32()!==0x4d54726b)break;const len=u32(),end=p+len;let tick=0,rs=0;const on={};
+    while(p<end){
+      tick+=vl();let st=v.getUint8(p);if(st<128)st=rs;else p++;
+      if(st===255){const ty=v.getUint8(p++),l=vl();if(ty===81&&!tempo)tempo=v.getUint8(p)<<16|v.getUint8(p+1)<<8|v.getUint8(p+2);p+=l}
+      else if(st===240||st===247){p+=vl()}
+      else{rs=st;const h=st>>4,ch=st&15,a=v.getUint8(p++),b=(h===12||h===13)?0:v.getUint8(p++);
+        if(ch===9)continue;
+        if(h===9&&b>0)on[ch+"_"+a]=tick;
+        else if(h===8||(h===9&&b===0)){const k=ch+"_"+a;if(on[k]!==undefined){ev.push({m:a,s:on[k]/tpq,d:Math.max((tick-on[k])/tpq,.0625)});delete on[k]}}}
+    }
+    p=end;
+  }
+  if(!ev.length)throw "ไม่พบโน้ตในไฟล์นี้";
+  ev.sort((x,y)=>x.s-y.s);
+  const med=ev.map(e=>e.m).sort((x,y)=>x-y)[ev.length>>1],sh=Math.round((66-med)/12)*12,g={};
+  ev.forEach(e=>{let m=e.m+sh;while(m<48)m+=12;while(m>95)m-=12;const k=Math.round(e.s*16)/16;(g[k]=g[k]||{ms:new Set(),d:e.d}).ms.add(m)});
+  const ks=Object.keys(g).map(Number).sort((x,y)=>x-y).slice(0,1200);
+  const text=ks.map((k,i)=>{const d=i<ks.length-1?ks[i+1]-k:g[k].d;return[...g[k].ms].map(nameOf).join("+")+":"+(Math.round(d*1000)/1000||1)}).join(" ");
+  return{text,bpm:tempo?Math.round(6e7/tempo):90};
+}
+const songSel=document.getElementById("song");
+function fill(sel){songSel.innerHTML="";BUILT.concat(user).forEach((x,i)=>{const o=document.createElement("option");o.value=i;o.textContent=(i>=BUILT.length?"★ ":"")+x[0];songSel.appendChild(o)});if(sel!==undefined)songSel.value=sel}
+fill();
+// keyboard
+const kb=document.getElementById("kb");let keys={},rect={},whites=[],ww=.04;
+function build(lo,hi){
+  kb.innerHTML="";keys={};rect={};whites=[];tgt=[];
+  for(let m=lo;m<=hi;m++)if(!isB(m))whites.push(m);
+  ww=1/whites.length;let wi=0;
+  for(let m=lo;m<=hi;m++){
+    const el=document.createElement("button");el.type="button";el.setAttribute("aria-label",nameOf(m));
+    if(isB(m)){rect[m]=[wi*ww-ww*.3,ww*.6];el.className="b"}else{rect[m]=[wi*ww,ww];el.className="w";wi++}
+    el.style.left=rect[m][0]*100+"%";el.style.width=rect[m][1]*100+"%";
+    el.addEventListener("pointerdown",e=>{e.preventDefault();press(m)});
+    kb.appendChild(el);keys[m]=el;
+  }
+}
+// audio
+let ctx=null;
+const ensure=()=>{if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();if(ctx.state==="suspended")ctx.resume()};
+function tone(m,dur){
+  if(micOn)return;
+  const f=440*Math.pow(2,(m-69)/12),t=ctx.currentTime,L=Math.max(dur,.4),g=ctx.createGain();
+  g.connect(ctx.destination);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.3,t+.008);g.gain.exponentialRampToValueAtTime(.001,t+L+.5);
+  [[1,"triangle",1],[2,"sine",.35],[3,"sine",.12]].forEach(([k,ty,v])=>{const o=ctx.createOscillator(),vg=ctx.createGain();o.type=ty;o.frequency.value=f*k;vg.gain.value=v;o.connect(vg);vg.connect(g);o.start(t);o.stop(t+L+.55)});
+}
+const flash=(m,c,ms)=>{const k=keys[m];if(!k)return;k.classList.add(c);setTimeout(()=>k.classList.remove(c),ms)};
+// state
+const cv=document.getElementById("cv"),g2=cv.getContext("2d"),stat=document.getElementById("stat"),btn=document.getElementById("play");
+const sizeEl=document.getElementById("size"),prog=document.getElementById("prog"),bpmEl=document.getElementById("bpm"),modeEl=document.getElementById("mode"),micEl=document.getElementById("mic");
+let steps=[],notes=[],idx=0,pos=0,playing=false,last=0,ok=0,bad=0,PPB=80,W=0,H=300,tgt=[],micOn=false,an=null,fb=null,base={},hold={};
+bpmEl.oninput=()=>document.getElementById("bpmv").textContent=bpmEl.value;
+function size(){const r=window.devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*r;cv.height=H*r;g2.setTransform(r,0,0,r,0,0)}
+new ResizeObserver(size).observe(cv);size();
+function prepare(){
+  stop("");
+  const r=parse(BUILT.concat(user)[songSel.value][1]);steps=r.steps;notes=r.notes;
+  const ms=notes.map(n=>n.m),mn=Math.min(...ms),mx=Math.max(...ms);
+  let lo=Math.floor(mn/12)*12,hi=Math.floor(mx/12)*12+12;if(hi-lo<24)hi=lo+24;
+  const sz=sizeEl.value;if(sz==="88"){lo=21;hi=108}else if(sz==="61"){lo=36;hi=96}else if(sz==="49"){lo=36;hi=84}
+  if(sz!=="auto"){let sh=0;while(mx+sh>hi)sh-=12;while(mn+sh<lo)sh+=12;notes.forEach(n=>{n.m+=sh;while(n.m<lo)n.m+=12;while(n.m>hi)n.m-=12})}
+  build(lo,hi);pos=-H/PPB;idx=0;
+}
+function setNext(){tgt.forEach(m=>keys[m]&&keys[m].classList.remove("next"));tgt=[];base={};hold={};
+  const t=steps[idx];if(playing&&t&&modeEl.value==="follow"){t.ns.forEach(n=>{if(!n.hit){tgt.push(n.m);keys[n.m].classList.add("next")}})}}
+function stop(msg){playing=false;btn.textContent="เริ่ม";setNext();if(msg!==undefined)stat.textContent=msg}
+function start(){
+  ensure();notes.forEach(n=>n.hit=false);idx=0;pos=-H/PPB-.5;ok=0;bad=0;playing=true;btn.textContent="หยุด";last=performance.now();setNext();updStat();
+}
+const updStat=()=>{stat.textContent=modeEl.value==="follow"?"ถูก "+ok+" · ผิด "+bad+" · เหลือ "+(steps.length-idx)+" จังหวะ"+(micOn?" · ไมค์ฟังอยู่":""):"กำลังเล่น…"};
+btn.onclick=()=>playing?stop(""):start();
+songSel.onchange=modeEl.onchange=sizeEl.onchange=prepare;
+function hit(m){
+  const t=steps[idx];if(!t||t.s-pos>.6)return false;
+  const n=t.ns.find(x=>x.m===m&&!x.hit);if(!n)return false;
+  n.hit=true;ok++;flash(m,"on",250);
+  if(t.ns.every(x=>x.hit)){idx++}setNext();return true;
+}
+function press(m){
+  ensure();tone(m,.6);
+  if(!playing||modeEl.value!=="follow"){flash(m,"on",250);return}
+  if(!hit(m)){bad++;flash(m,"bad",200)}
+  updStat();
+}
+// mic
+micEl.onchange=async()=>{
+  if(!micEl.checked){micOn=false;return}
+  try{
+    ensure();
+    const s=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    an=ctx.createAnalyser();an.fftSize=16384;an.smoothingTimeConstant=0;ctx.createMediaStreamSource(s).connect(an);
+    fb=new Float32Array(an.frequencyBinCount);micOn=true;stat.textContent="ไมค์เปิดแล้ว วางมือถือใกล้เปียโน แล้วกดเริ่ม";
+  }catch(e){micEl.checked=false;micOn=false;stat.textContent="เปิดไมค์ไม่ได้ (หน้านี้อาจไม่อนุญาตไมค์ ลองเปิดลิงก์ตรงๆ ในเบราว์เซอร์ หรือตรวจสอบสิทธิ์ไมค์)"}
+};
+function listen(){
+  if(!micOn||!playing||modeEl.value!=="follow"||!tgt.length)return;
+  an.getFloatFrequencyData(fb);const bw=ctx.sampleRate/an.fftSize;
+  let sum=0,c=0;for(let i=Math.floor(100/bw);i<3000/bw;i+=4){sum+=fb[i];c++}const floor=sum/c;
+  for(const m of tgt.slice()){
+    const f=440*Math.pow(2,(m-69)/12);let pk=-200;
+    for(let i=Math.floor(f*.985/bw);i<=Math.ceil(f*1.015/bw);i++)if(fb[i]>pk)pk=fb[i];
+    base[m]=base[m]===undefined?pk:Math.min(base[m],pk);
+    if(pk>floor+18&&pk>base[m]+8){hold[m]=(hold[m]||0)+1;if(hold[m]>=2){hit(m);updStat()}}else hold[m]=0;
+  }
+}
+const col=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function frame(now){
+  const dt=Math.min((now-last)/1000,.1);last=now;
+  if(playing&&steps.length){
+    const adv=dt*bpmEl.value/60,L=steps[steps.length-1];
+    if(modeEl.value==="auto"){
+      pos+=adv;
+      while(idx<steps.length&&steps[idx].s<=pos){steps[idx++].ns.forEach(n=>{tone(n.m,n.d*60/bpmEl.value);flash(n.m,"on",Math.min(n.d*60000/bpmEl.value*.9,600))})}
+      if(idx>=steps.length&&pos>L.s+L.d+.5)stop("จบเพลง");
+    }else{
+      const t=steps[idx];pos=t?Math.min(pos+adv,t.s):pos+adv;listen();
+      if(!t&&pos>L.s+L.d+.3){const tot=ok+bad;stop("จบเพลง · ถูก "+ok+" จาก "+tot+" ครั้ง ("+Math.round(ok/Math.max(tot,1)*100)+"%)")}
+    }
+  }
+  g2.clearRect(0,0,W,H);g2.fillStyle=col("--cv");g2.fillRect(0,0,W,H);
+  const gr=g2.createLinearGradient(0,H*.5,0,H);gr.addColorStop(0,"rgba(56,195,211,0)");gr.addColorStop(1,"rgba(56,195,211,.16)");g2.fillStyle=gr;g2.fillRect(0,0,W,H);
+  g2.strokeStyle="rgba(150,170,185,.12)";g2.lineWidth=1;
+  for(let i=1;i<whites.length;i++){const x=Math.round(i*ww*W)+.5;g2.beginPath();g2.moveTo(x,0);g2.lineTo(x,H);g2.stroke()}
+  const ac=col("--bar"),gl=col("--glow"),oa="#2a1500",cur=steps[idx];
+  notes.forEach(n=>{
+    const bot=H-(n.s-pos)*PPB,top=bot-n.d*PPB+3;
+    if(top>H||bot<0||!rect[n.m])return;
+    const[x,w]=rect[n.m],px=x*W+1,pw=Math.max(w*W-2,4),nx=playing&&cur&&cur.ns.includes(n)&&!n.hit;
+    g2.globalAlpha=n.hit?.25:1;g2.fillStyle=nx?gl:ac;g2.shadowColor=nx?gl:ac;g2.shadowBlur=nx?18:7;
+    g2.beginPath();g2.roundRect(px,top,pw,Math.max(bot-top-2,8),6);g2.fill();g2.shadowBlur=0;
+    if(bot-top>22&&pw>16&&!n.hit){g2.fillStyle=oa;g2.font="600 10px sans-serif";g2.textAlign="center";g2.fillText(N[n.m%12],px+pw/2,bot-8)}
+    g2.globalAlpha=1;
+  });
+  g2.shadowColor=gl;g2.shadowBlur=14;g2.fillStyle=gl;g2.globalAlpha=.9;g2.fillRect(0,H-3,W,3);g2.shadowBlur=0;g2.globalAlpha=1;
+  if(steps.length){const L=steps[steps.length-1];prog.value=Math.max(0,Math.min(1000,Math.round(pos/(L.s+L.d)*1000)))}
+  requestAnimationFrame(frame);
+}
+prog.oninput=()=>{const L=steps[steps.length-1];if(!L)return;pos=prog.value/1000*(L.s+L.d)-.001;idx=steps.findIndex(x=>x.s>=pos);if(idx<0)idx=steps.length;notes.forEach(n=>n.hit=n.s<pos);setNext()};
+prepare();requestAnimationFrame(frame);
+// add / delete / import
+const err=document.getElementById("err");
+function addSong(nm,nt,sel){user.push([nm,nt.trim()]);save();fill(BUILT.length+user.length-1);prepare()}
+document.getElementById("add").onclick=()=>{
+  const nm=document.getElementById("nm").value.trim(),nt=document.getElementById("nt").value;
+  try{if(!nm)throw "ตั้งชื่อเพลงก่อน";parse(nt)}catch(e){err.textContent=String(e);return}
+  err.textContent="";addSong(nm,nt);stat.textContent="บันทึกแล้ว กดเริ่มได้เลย";
+  document.getElementById("nm").value="";document.getElementById("nt").value="";
+};
+document.getElementById("del").onclick=()=>{
+  const i=+songSel.value;if(i<BUILT.length){err.textContent="ลบได้เฉพาะเพลงที่เพิ่มเอง (มีดาว ★)";return}
+  err.textContent="";user.splice(i-BUILT.length,1);save();fill(0);prepare();stat.textContent="ลบแล้ว";
+};
+document.getElementById("file").onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{const r=readMidi(await f.arrayBuffer());parse(r.text);err.textContent="";
+    addSong(f.name.replace(/\.midi?$/i,""),r.text);bpmEl.value=Math.min(200,Math.max(40,r.bpm));bpmEl.oninput();
+    stat.textContent="นำเข้า “"+f.name+"” แล้ว (ปรับโน้ตให้อยู่ในช่วงเปียโน)"}
+  catch(x){err.textContent="นำเข้าไม่สำเร็จ: "+String(x)}
+  e.target.value="";
+};
+</script>
+</body>
+</html>
